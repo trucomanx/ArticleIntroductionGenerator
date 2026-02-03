@@ -1,13 +1,44 @@
 import json
 import sys
+import os
+import subprocess
+import signal
+
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QTextEdit, QLineEdit, QPushButton, QFileDialog,
     QTabWidget, QListWidget, QMessageBox, QStatusBar, QToolBar,
-    QComboBox, QScrollArea, QListWidgetItem
+    QComboBox, QScrollArea, QListWidgetItem, QSizePolicy, QAction
 )
-from PyQt5.QtCore import Qt
 
+from PyQt5.QtGui  import QIcon, QDesktopServices
+from PyQt5.QtCore import Qt, QUrl, QSize
+
+
+import article_introduction_generator.about as about
+import article_introduction_generator.modules.configure as configure 
+from   article_introduction_generator.modules.wabout  import show_about_window
+from   article_introduction_generator.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
+
+# Path to config file
+CONFIG_PATH = os.path.join( os.path.expanduser("~"),
+                            ".config", 
+                            about.__package__, 
+                            "config.json" )
+
+DEFAULT_CONTENT={   "toolbar_configure": "Configure",
+                    "toolbar_configure_tooltip": "Open the configure Json file",
+                    "toolbar_about": "About",
+                    "toolbar_about_tooltip": "About the program",
+                    "toolbar_coffee": "Coffee",
+                    "toolbar_coffee_tooltip": "Buy me a coffee (TrucomanX)",
+                    "window_width": 1024,
+                    "window_height": 800
+                }
+
+configure.verify_default_config(CONFIG_PATH,default_content=DEFAULT_CONTENT)
+
+CONFIG=configure.load_config(CONFIG_PATH)
 
 # ---------- Reusable Widgets ----------
 
@@ -65,7 +96,9 @@ class StringListEditor(QWidget):
 
         btn_layout = QHBoxLayout()
         add_btn = QPushButton("Add")
+        add_btn.setIcon(QIcon.fromTheme("list-add"))
         remove_btn = QPushButton("Remove")
+        remove_btn.setIcon(QIcon.fromTheme("list-remove"))
         btn_layout.addWidget(add_btn)
         btn_layout.addWidget(remove_btn)
 
@@ -109,11 +142,16 @@ class StringListEditor(QWidget):
 
 
     def get(self):
-        return [
-            self.list.item(i).text()
-            for i in range(self.list.count())
-            if self.list.item(i).text().strip()
-        ]
+        values = []
+        for i in range(self.list.count()):
+            item = self.list.item(i)
+            if not (item.flags() & Qt.ItemIsEditable):
+                continue
+            text = item.text().strip()
+            if text:
+                values.append(text)
+        return values
+
 
     def set(self, values):
         self.list.clear()
@@ -141,8 +179,16 @@ class StringListEditor(QWidget):
 class JsonIntroductionEditor(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Q1 Introduction JSON Editor")
-        self.resize(1100, 800)
+        
+        self.setWindowTitle(about.__program_name__)
+        #self.setGeometry(100, 100, 800, 240)
+        self.resize(CONFIG["window_width"], CONFIG["window_height"])
+
+        ## Icon
+        # Get base directory for icons
+        base_dir_path = os.path.dirname(os.path.abspath(__file__))
+        self.icon_path = os.path.join(base_dir_path, 'icons', 'logo.png')
+        self.setWindowIcon(QIcon(self.icon_path)) 
 
         self.current_path = None
 
@@ -200,17 +246,69 @@ class JsonIntroductionEditor(QMainWindow):
         """)
 
     def _create_toolbar(self):
-        toolbar = QToolBar("Main Toolbar")
-        self.addToolBar(toolbar)
+        self.toolbar = self.addToolBar("Main")
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
 
-        load_btn = QPushButton("Load JSON")
-        save_btn = QPushButton("Save JSON")
+        #
+        self.load_action = QAction(QIcon.fromTheme("document-open"), "Load JSON", self)
+        self.load_action.setToolTip("load JSON")
+        self.load_action.triggered.connect(self.load_json)
+        self.toolbar.addAction(self.load_action)
+        
+        #
+        self.save_as_action = QAction(QIcon.fromTheme("document-save-as"), "Save as JSON", self)
+        self.save_as_action.setToolTip("save as")
+        self.save_as_action.triggered.connect(self.save_as_json)
+        self.toolbar.addAction(self.save_as_action)
+        
+        # Adicionar o espaçador
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toolbar.addWidget(spacer)
+        
+        #
+        self.configure_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["toolbar_configure"], self)
+        self.configure_action.setToolTip(CONFIG["toolbar_configure_tooltip"])
+        self.configure_action.triggered.connect(self.open_configure_editor)
+        self.toolbar.addAction(self.configure_action)
+        
+        #
+        self.about_action = QAction(QIcon.fromTheme("help-about"), CONFIG["toolbar_about"], self)
+        self.about_action.setToolTip(CONFIG["toolbar_about_tooltip"])
+        self.about_action.triggered.connect(self.open_about)
+        self.toolbar.addAction(self.about_action)
+        
+        # Coffee
+        self.coffee_action = QAction(QIcon.fromTheme("emblem-favorite"), CONFIG["toolbar_coffee"], self)
+        self.coffee_action.setToolTip(CONFIG["toolbar_coffee_tooltip"])
+        self.coffee_action.triggered.connect(self.on_coffee_action_click)
+        self.toolbar.addAction(self.coffee_action)
 
-        load_btn.clicked.connect(self.load_json)
-        save_btn.clicked.connect(self.save_json)
 
-        toolbar.addWidget(load_btn)
-        toolbar.addWidget(save_btn)
+    def open_configure_editor(self):
+        if os.name == 'nt':  # Windows
+            os.startfile(CONFIG_PATH)
+        elif os.name == 'posix':  # Linux/macOS
+            subprocess.run(['xdg-open', CONFIG_PATH])
+
+    def open_about(self):
+        data={
+            "version": about.__version__,
+            "package": about.__package__,
+            "program_name": about.__program_name__,
+            "author": about.__author__,
+            "email": about.__email__,
+            "description": about.__description__,
+            "url_source": about.__url_source__,
+            "url_doc": about.__url_doc__,
+            "url_funding": about.__url_funding__,
+            "url_bugs": about.__url_bugs__
+        }
+        show_about_window(data,self.icon_path)
+
+    def on_coffee_action_click(self):
+        QDesktopServices.openUrl(QUrl("https://ko-fi.com/trucomanx"))
+    
 
     def _create_status_bar(self):
         self.status = QStatusBar()
@@ -228,8 +326,14 @@ class JsonIntroductionEditor(QMainWindow):
         self.tabs.addTab(self._wrap_scroll(self._contributions_tab()), "Contributions")
         self.tabs.addTab(self._related_work_tab(), "Related Work")
         self.tabs.addTab(self._wrap_scroll(self._writing_guidelines_tab()), "Writing Guidelines")
+        
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+
 
     # ---------- Tabs ----------
+
+    def _on_tab_changed(self, index):
+        self._save_current_reference()
 
     def _paper_profile_tab(self):
         w = QWidget()
@@ -310,15 +414,23 @@ class JsonIntroductionEditor(QMainWindow):
 
     def _references_tab(self):
         w = QWidget()
-        layout = QHBoxLayout()
+        main_layout = QVBoxLayout(w)
 
+        # ---- Lista de referências + painel de edição ----
+        content_layout = QHBoxLayout()
+
+        # Lista de referências
         self.ref_list = QListWidget()
+        self.ref_list.setEditTriggers(
+            QListWidget.DoubleClicked | QListWidget.EditKeyPressed
+        )
+        self.ref_list.itemChanged.connect(self._on_reference_renamed)
         self.ref_list.currentItemChanged.connect(self._load_reference)
+        content_layout.addWidget(self.ref_list, 1)
 
-        # ---- Right panel (scrollable) ----
+        # Painel de edição (scrollable)
         right_widget = QWidget()
-        right = QVBoxLayout()
-        right_widget.setLayout(right)
+        right_layout = QVBoxLayout(right_widget)
 
         self.ref_bibtex = LabeledTextEdit("BibTeX", "BibTeX entry. This is the only source for citations.")
         self.ref_abstract = LabeledTextEdit("Abstract", "Original abstract of the cited paper.")
@@ -334,28 +446,65 @@ class JsonIntroductionEditor(QMainWindow):
             self.ref_contribution, self.ref_strengths,
             self.ref_limitations, self.ref_relevance, self.ref_role
         ]:
-            right.addWidget(wdg)
+            right_layout.addWidget(wdg)
 
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(right_widget)
+
+        content_layout.addWidget(scroll, 3)
+
+        main_layout.addLayout(content_layout)
+
+        # ---- Botões fora do scroll ----
         btns = QHBoxLayout()
+
         add = QPushButton("Add Reference")
+        add.setIcon(QIcon.fromTheme("list-add"))
+        add.setIconSize(QSize(32, 32))
+
         remove = QPushButton("Remove Reference")
+        remove.setIcon(QIcon.fromTheme("list-remove"))
+        remove.setIconSize(QSize(32, 32))
+
         btns.addWidget(add)
         btns.addWidget(remove)
 
         add.clicked.connect(self._add_reference)
         remove.clicked.connect(self._remove_reference)
 
-        right.addLayout(btns)
+        main_layout.addLayout(btns)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(right_widget)
-
-        layout.addWidget(self.ref_list, 1)
-        layout.addWidget(scroll, 3)
-
-        w.setLayout(layout)
+        w.setLayout(main_layout)
         return w
+
+    
+    
+    def _on_reference_renamed(self, item: QListWidgetItem):
+        old_key = self.current_reference_key
+        new_key = item.text().strip()
+
+        if not old_key:
+            return
+
+        if not new_key:
+            QMessageBox.warning(self, "Invalid name", "Reference key cannot be empty.")
+            self.ref_list.blockSignals(True)
+            item.setText(old_key)
+            self.ref_list.blockSignals(False)
+            return
+
+        if new_key in self.references_data and new_key != old_key:
+            QMessageBox.warning(self, "Duplicate key", "This reference key already exists.")
+            self.ref_list.blockSignals(True)
+            item.setText(old_key)
+            self.ref_list.blockSignals(False)
+            return
+
+        self._save_current_reference()
+
+        self.references_data[new_key] = self.references_data.pop(old_key)
+        self.current_reference_key = new_key
 
 
     def _synthesis_tab(self):
@@ -411,8 +560,17 @@ class JsonIntroductionEditor(QMainWindow):
         key = f"ref_{next_idx}"
         self.references_data[key] = {}
 
-        self.ref_list.addItem(key)
-        self.ref_list.setCurrentRow(self.ref_list.count() - 1)
+        self.ref_list.blockSignals(True)
+
+        item = QListWidgetItem(key)
+        item.setFlags(item.flags() | Qt.ItemIsEditable)
+        self.ref_list.addItem(item)
+        self.ref_list.setCurrentItem(item)
+
+        self.current_reference_key = key
+
+        self.ref_list.blockSignals(False)
+
         self._clear_reference_editor()
 
     def _clear_reference_editor(self):
@@ -430,6 +588,10 @@ class JsonIntroductionEditor(QMainWindow):
             key = item.text()
             self.references_data.pop(key, None)
             self.ref_list.takeItem(self.ref_list.row(item))
+
+            if key == self.current_reference_key:
+                self.current_reference_key = None
+
         self._clear_reference_editor()
 
     def _save_current_reference(self):
@@ -437,25 +599,29 @@ class JsonIntroductionEditor(QMainWindow):
             return
 
         self.references_data[self.current_reference_key] = {
-            "bibtex": self.bibtex_edit.toPlainText(),
-            "abstract": self.abstract_edit.toPlainText(),
-            "methodological_category": self.method_combo.currentText(),
-            "central_technical_contribution": self.contribution_edit.toPlainText(),
-            "author_reported_strengths": self.strengths_list.get_items(),
-            "reported_limitations": self.limitations_list.get_items(),
-            "relevance_to_our_work": self.relevance_edit.toPlainText(),
-            "introduction_paragraph_role": self.role_combo.currentText(),
+            "bibtex": self.ref_bibtex.get(),
+            "abstract": self.ref_abstract.get(),
+            "methodological_category": self.ref_category.get(),
+            "central_technical_contribution": self.ref_contribution.get(),
+            "author_reported_strengths": self.ref_strengths.get(),
+            "reported_limitations": self.ref_limitations.get(),
+            "relevance_to_our_work": self.ref_relevance.get(),
+            "introduction_paragraph_role": self.ref_role.get(),
         }
 
 
     def _load_reference(self, current, previous):
-        if previous:
+        if previous and self.current_reference_key:
             self._save_current_reference()
+
         if not current:
+            self.current_reference_key = None
             return
 
-        key = current.text()
-        ref = self.references_data.get(key, {})
+        self.ref_list.blockSignals(True)
+
+        self.current_reference_key = current.text()
+        ref = self.references_data.get(self.current_reference_key, {})
 
         self.ref_bibtex.set(ref.get("bibtex"))
         self.ref_abstract.set(ref.get("abstract"))
@@ -465,6 +631,9 @@ class JsonIntroductionEditor(QMainWindow):
         self.ref_limitations.set(ref.get("reported_limitations", []))
         self.ref_relevance.set(ref.get("relevance_to_our_work"))
         self.ref_role.set(ref.get("introduction_paragraph_role"))
+
+        self.ref_list.blockSignals(False)
+
 
     # ---------- Load / Save ----------
 
@@ -507,7 +676,12 @@ class JsonIntroductionEditor(QMainWindow):
         self.ref_list.clear()
 
         for key in self.references_data.keys():
-            self.ref_list.addItem(key)
+            item = QListWidgetItem(key)
+            item.setFlags(item.flags() | Qt.ItemIsEditable)
+            self.ref_list.addItem(item)
+
+        if self.ref_list.count() > 0:
+            self.ref_list.setCurrentRow(0)
 
         # ---- Related Work: Human Curated Synthesis ----
         synth = data.get("related_work", {}).get("human_curated_synthesis", {})
@@ -515,7 +689,8 @@ class JsonIntroductionEditor(QMainWindow):
         self.syn_open.set(synth.get("open_problems", []))
         self.syn_gap.set(synth.get("explicit_research_gap"))
 
-    def save_json(self):
+
+    def save_as_json(self):
         self._save_current_reference()
 
         path, _ = QFileDialog.getSaveFileName(self, "Save JSON", "", "JSON Files (*.json)")
@@ -557,9 +732,40 @@ class JsonIntroductionEditor(QMainWindow):
 
 # ---------- Main ----------
 
-if __name__ == "__main__":
+def main():
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
+    '''
+    create_desktop_directory()    
+    create_desktop_menu()
+    create_desktop_file(os.path.join("~",".local","share","applications"), 
+                        program_name=about.__program_name__)
+    
+    for n in range(len(sys.argv)):
+        if sys.argv[n] == "--autostart":
+            create_desktop_directory(overwrite = True)
+            create_desktop_menu(overwrite = True)
+            create_desktop_file(os.path.join("~",".config","autostart"), 
+                                overwrite=True, 
+                                program_name=about.__program_name__)
+            return
+        if sys.argv[n] == "--applications":
+            create_desktop_directory(overwrite = True)
+            create_desktop_menu(overwrite = True)
+            create_desktop_file(os.path.join("~",".local","share","applications"), 
+                                overwrite=True, 
+                                program_name=about.__program_name__)
+            return
+    '''
+    
     app = QApplication(sys.argv)
+    app.setApplicationName(about.__package__) 
+    
     win = JsonIntroductionEditor()
     win.show()
     sys.exit(app.exec_())
+    
+    
+if __name__ == "__main__":
+    main()
 
