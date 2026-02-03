@@ -67,7 +67,7 @@ Here is the anti-ai-hallucination heart.
       "bibtex": "@article{smith2022deep, ...}",
       "abstract": "This paper proposes...",
       "methodological_category": "deep_learning",
-      "central_technical_contribution": "Introduces a CNN-based approach for...",
+      "central_technical_idea": "Introduces a CNN-based approach for...",
       "author_reported_strengths": [
         "High accuracy",
         "Robust to noise"
@@ -83,12 +83,13 @@ Here is the anti-ai-hallucination heart.
 }
 ```
 
-| Field                         | Why                                      |
-| ----------------------------- | ---------------------------------------- |
-| `methodological_category`     | What kind of technical solution is this? |
-| `reported_limitations`        | Feeds the critical paragraph             |
-| `relevance_to_our_work`       | Avoids generic comparisons               |
-| `introduction_paragraph_role` | Controls where to cite                   |
+| Field                         | Why                                        |
+| ----------------------------- | ------------------------------------------ |
+| `methodological_category`     | What kind of technical solution is this?   |
+| `central_technical_idea`      | Main technical idea introduced by this work|
+| `reported_limitations`        | Feeds the critical paragraph               |
+| `relevance_to_our_work`       | Avoids generic comparisons                 |
+| `introduction_paragraph_role` | Controls where to cite                     |
 
 Exemplos de methodological_category:
 

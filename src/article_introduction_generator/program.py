@@ -3,12 +3,13 @@ import sys
 import os
 import subprocess
 import signal
+import traceback
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QTextEdit, QLineEdit, QPushButton, QFileDialog,
     QTabWidget, QListWidget, QMessageBox, QStatusBar, QToolBar,
-    QComboBox, QScrollArea, QListWidgetItem, QSizePolicy, QAction
+    QComboBox, QScrollArea, QListWidgetItem, QSizePolicy, QAction, QDialog
 )
 
 from PyQt5.QtGui  import QIcon, QDesktopServices
@@ -20,7 +21,10 @@ import article_introduction_generator.modules.configure as configure
 from   article_introduction_generator.modules.wabout  import show_about_window
 from   article_introduction_generator.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
 
-# Path to config file
+
+from article_introduction_generator.modules.consult import consultation_in_depth
+
+# ---------- Path to config file ----------
 CONFIG_PATH = os.path.join( os.path.expanduser("~"),
                             ".config", 
                             about.__package__, 
@@ -39,6 +43,106 @@ DEFAULT_CONTENT={   "toolbar_configure": "Configure",
 configure.verify_default_config(CONFIG_PATH,default_content=DEFAULT_CONTENT)
 
 CONFIG=configure.load_config(CONFIG_PATH)
+
+# ---------- Path to config LLM file ----------
+CONFIG_LLM_PATH = os.path.join( os.path.expanduser("~"),
+                                ".config", 
+                                about.__package__, 
+                                "config.llm.json" )
+
+DEFAULT_LLM_CONTENT={
+    "api_key": "",
+    "usage": "https://deepinfra.com/dash/usage",
+    "base_url": "https://api.deepinfra.com/v1/openai",
+    "model": "meta-llama/Meta-Llama-3.1-70B-Instruct"
+}
+
+configure.verify_default_config(CONFIG_LLM_PATH,default_content=DEFAULT_LLM_CONTENT)
+
+CONFIG_LLM = configure.load_config(CONFIG_LLM_PATH)
+
+# -------- Error dialog --------
+class MessageDialog(QDialog):
+    """Error dialog with scrollable text area"""
+    def __init__(   self, 
+                    message, 
+                    parent=None, 
+                    window_title = "Title message",
+                    title_message = "Some text",
+                    button_ok_text = "OK",
+                    button_copy_text = "Copy to clipboard",
+                    width = 400,
+                    height = 300
+        ):
+        
+        super().__init__(parent)
+
+        self.setWindowTitle(window_title)
+        self.resize(width, height)
+
+        # Layout principal
+        layout = QVBoxLayout(self)
+
+        # Label
+        label = QLabel(title_message)
+        layout.addWidget(label)
+
+        # Text area
+        self.text_edit = QTextEdit()
+        self.text_edit.setPlainText(message)
+        self.text_edit.setReadOnly(True)
+        self.text_edit.setLineWrapMode(QTextEdit.WidgetWidth)
+        layout.addWidget(self.text_edit)
+
+        # Layout dos botões
+        button_layout = QHBoxLayout()
+
+        # Botão copiar
+        copy_button = QPushButton(button_copy_text)
+        copy_button.clicked.connect(self.copy_to_clipboard)
+        button_layout.addWidget(copy_button)
+
+        # Botão OK
+        ok_button = QPushButton(button_ok_text)
+        ok_button.clicked.connect(self.accept)
+        button_layout.addWidget(ok_button)
+
+        layout.addLayout(button_layout)
+
+    def copy_to_clipboard(self):
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.text_edit.toPlainText())
+
+
+def show_error_dialog(  message, 
+                        title_message = "An error occurred:", 
+                        width = 800,
+                        height = 600 ):
+    dialog = MessageDialog( message, 
+                            window_title = "Error message", 
+                            title_message = title_message,
+                            button_ok_text = "OK",
+                            button_copy_text = "Copy to clipboard",
+                            width = width,
+                            height = height
+    )
+    
+    dialog.exec_()
+    
+def show_info_dialog(   message, 
+                        title_message = "", 
+                        width = 800,
+                        height = 600 ):
+    dialog = MessageDialog( message, 
+                            window_title = "Information message", 
+                            title_message = title_message,
+                            button_ok_text = "OK",
+                            button_copy_text = "Copy to clipboard",
+                            width = width,
+                            height = height
+    )
+    
+    dialog.exec_()
 
 # ---------- Reusable Widgets ----------
 
@@ -261,6 +365,12 @@ class JsonIntroductionEditor(QMainWindow):
         self.save_as_action.triggered.connect(self.save_as_json)
         self.toolbar.addAction(self.save_as_action)
         
+        #
+        self.generate_intro_action = QAction(QIcon.fromTheme("emblem-generic"), "Generate intro.", self)
+        self.generate_intro_action.setToolTip("Generate introduction")
+        self.generate_intro_action.triggered.connect(self.generate_intro)
+        self.toolbar.addAction(self.generate_intro_action)
+        
         # Adicionar o espaçador
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -284,12 +394,14 @@ class JsonIntroductionEditor(QMainWindow):
         self.coffee_action.triggered.connect(self.on_coffee_action_click)
         self.toolbar.addAction(self.coffee_action)
 
-
-    def open_configure_editor(self):
+    def _open_file_in_text_editor(self, filepath):
         if os.name == 'nt':  # Windows
-            os.startfile(CONFIG_PATH)
+            os.startfile(filepath)
         elif os.name == 'posix':  # Linux/macOS
-            subprocess.run(['xdg-open', CONFIG_PATH])
+            subprocess.run(['xdg-open', filepath])
+            
+    def open_configure_editor(self):
+        self._open_file_in_text_editor(CONFIG_PATH)
 
     def open_about(self):
         data={
@@ -435,7 +547,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.ref_bibtex = LabeledTextEdit("BibTeX", "BibTeX entry. This is the only source for citations.")
         self.ref_abstract = LabeledTextEdit("Abstract", "Original abstract of the cited paper.")
         self.ref_category = LabeledLineEdit("Methodological Category", "e.g., deep_learning, transformer_based, graph_based.")
-        self.ref_contribution = LabeledTextEdit("Central Technical Contribution", "Main technical idea introduced by this work.")
+        self.ref_contribution = LabeledTextEdit("Central Technical Idea", "Main technical idea introduced by this work.")
         self.ref_strengths = StringListEditor("Author Reported Strengths", "Strengths explicitly claimed by the original authors.")
         self.ref_limitations = StringListEditor("Reported Limitations", "Limitations discussed or implied by the paper.")
         self.ref_relevance = LabeledTextEdit("Relevance to Our Work", "How this work relates to and differs from our paper.")
@@ -602,7 +714,7 @@ class JsonIntroductionEditor(QMainWindow):
             "bibtex": self.ref_bibtex.get(),
             "abstract": self.ref_abstract.get(),
             "methodological_category": self.ref_category.get(),
-            "central_technical_contribution": self.ref_contribution.get(),
+            "central_technical_idea": self.ref_contribution.get(),
             "author_reported_strengths": self.ref_strengths.get(),
             "reported_limitations": self.ref_limitations.get(),
             "relevance_to_our_work": self.ref_relevance.get(),
@@ -626,7 +738,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.ref_bibtex.set(ref.get("bibtex"))
         self.ref_abstract.set(ref.get("abstract"))
         self.ref_category.set(ref.get("methodological_category"))
-        self.ref_contribution.set(ref.get("central_technical_contribution"))
+        self.ref_contribution.set(ref.get("central_technical_idea"))
         self.ref_strengths.set(ref.get("author_reported_strengths", []))
         self.ref_limitations.set(ref.get("reported_limitations", []))
         self.ref_relevance.set(ref.get("relevance_to_our_work"))
@@ -689,13 +801,8 @@ class JsonIntroductionEditor(QMainWindow):
         self.syn_open.set(synth.get("open_problems", []))
         self.syn_gap.set(synth.get("explicit_research_gap"))
 
-
-    def save_as_json(self):
+    def _obtaining_data(self):
         self._save_current_reference()
-
-        path, _ = QFileDialog.getSaveFileName(self, "Save JSON", "", "JSON Files (*.json)")
-        if not path:
-            return
 
         data = {
             "paper_profile": {
@@ -722,6 +829,16 @@ class JsonIntroductionEditor(QMainWindow):
             },
             "writing_guidelines": self.wg.get()
         }
+        
+        return data
+        
+    def save_as_json(self):
+
+        path, _ = QFileDialog.getSaveFileName(self, "Save JSON", "", "JSON Files (*.json)")
+        if not path:
+            return
+
+        data = self._obtaining_data()
 
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
@@ -729,7 +846,30 @@ class JsonIntroductionEditor(QMainWindow):
         self.current_path = path
         self.status.showMessage(f"Saved to {path}")
 
-
+    def generate_intro(self):
+        global CONFIG_LLM
+        
+        data = self._obtaining_data()
+                
+        if CONFIG_LLM["api_key"]=="":
+            CONFIG_LLM = configure.load_config(CONFIG_LLM_PATH)
+            
+            if CONFIG_LLM["api_key"]=="":
+                self.status.showMessage("Open: " + CONFIG_LLM_PATH)
+                self._open_file_in_text_editor(CONFIG_LLM_PATH)
+                QDesktopServices.openUrl(QUrl(CONFIG_LLM["usage"]))
+                
+                return
+        
+        try:
+            #print(0/0)
+            out = consultation_in_depth(CONFIG_LLM, data)
+            show_info_dialog(out, title_message="LLM response:")
+        
+        except Exception as e:
+            # Capture any exception and display the error
+            error_message = f"Error: {str(e)}\n\nDetails:\n{traceback.format_exc()}"
+            show_error_dialog(error_message)
 # ---------- Main ----------
 
 def main():
