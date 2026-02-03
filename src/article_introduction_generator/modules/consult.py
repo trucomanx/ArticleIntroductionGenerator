@@ -23,7 +23,9 @@ Strict rules:
 9. Do not use exactly the same text sent in JSON, try to use your own words to avoid plagiarism problems.
 
 You must write as a human researcher, not as an assistant.
+
 """
+
 USER_PROMPT = """
 Using the JSON below, write the complete INTRODUCTION section of the paper.
 
