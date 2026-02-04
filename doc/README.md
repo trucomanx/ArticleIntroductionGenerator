@@ -5,3 +5,4 @@
 * [Upload to PYPI](UPLOAD.md)
 * [Testing program from source](TESTING.md)
 * [Json format](JSON-FORMAT.md)
+* [Models and prices](LLM.md)

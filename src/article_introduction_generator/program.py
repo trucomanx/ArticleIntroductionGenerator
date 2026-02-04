@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
 
 from PyQt5.QtGui  import QIcon, QDesktopServices
 from PyQt5.QtCore import Qt, QUrl, QSize
-
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 import article_introduction_generator.about as about
 import article_introduction_generator.modules.configure as configure 
@@ -30,8 +30,12 @@ CONFIG_PATH = os.path.join( os.path.expanduser("~"),
                             about.__package__, 
                             "config.json" )
 
-DEFAULT_CONTENT={   "toolbar_configure": "Configure",
-                    "toolbar_configure_tooltip": "Open the configure Json file",
+DEFAULT_CONTENT={   "toolbar_llm_conf": "LLM Conf.",
+                    "toolbar_llm_conf_tooltip": "Open the configure Json file of LLM",
+                    "toolbar_url_usage": "LLM Usage",
+                    "toolbar_url_usage_tooltip": "Open the web page that shows the data usage and cost.",
+                    "toolbar_configure": "Configure",
+                    "toolbar_configure_tooltip": "Open the configure Json file of program GUI",
                     "toolbar_about": "About",
                     "toolbar_about_tooltip": "About the program",
                     "toolbar_coffee": "Coffee",
@@ -60,6 +64,24 @@ DEFAULT_LLM_CONTENT={
 configure.verify_default_config(CONFIG_LLM_PATH,default_content=DEFAULT_LLM_CONTENT)
 
 CONFIG_LLM = configure.load_config(CONFIG_LLM_PATH)
+
+
+# -------- Worker --------
+class ConsultationWorker(QObject):
+    finished = pyqtSignal(str)
+    error = pyqtSignal(str)
+
+    def __init__(self, config, data):
+        super().__init__()
+        self.config = config
+        self.data = data
+
+    def run(self):
+        try:
+            result = consultation_in_depth(self.config, self.data)
+            self.finished.emit(result)
+        except Exception as e:
+            self.error.emit(str(e))
 
 # -------- Error dialog --------
 class MessageDialog(QDialog):
@@ -377,6 +399,18 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addWidget(spacer)
         
         #
+        self.llm_conf_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["toolbar_llm_conf"], self)
+        self.llm_conf_action.setToolTip(CONFIG["toolbar_llm_conf_tooltip"])
+        self.llm_conf_action.triggered.connect(self.open_llm_conf_editor)
+        self.toolbar.addAction(self.llm_conf_action)
+        
+        #
+        self.url_usage_action = QAction(QIcon.fromTheme("emblem-web"), CONFIG["toolbar_url_usage"], self)
+        self.url_usage_action.setToolTip(CONFIG["toolbar_url_usage_tooltip"])
+        self.url_usage_action.triggered.connect(self.open_url_usage_editor)
+        self.toolbar.addAction(self.url_usage_action)
+        
+        #
         self.configure_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["toolbar_configure"], self)
         self.configure_action.setToolTip(CONFIG["toolbar_configure_tooltip"])
         self.configure_action.triggered.connect(self.open_configure_editor)
@@ -399,9 +433,15 @@ class JsonIntroductionEditor(QMainWindow):
             os.startfile(filepath)
         elif os.name == 'posix':  # Linux/macOS
             subprocess.run(['xdg-open', filepath])
-            
+    
+    def open_url_usage_editor(self):
+        QDesktopServices.openUrl(QUrl(CONFIG_LLM["usage"]))
+        
     def open_configure_editor(self):
         self._open_file_in_text_editor(CONFIG_PATH)
+        
+    def open_llm_conf_editor(self):
+        self._open_file_in_text_editor(CONFIG_LLM_PATH)
 
     def open_about(self):
         data={
@@ -846,11 +886,31 @@ class JsonIntroductionEditor(QMainWindow):
         self.current_path = path
         self.status.showMessage(f"Saved to {path}")
 
+    def is_data_empty(self, data: dict) -> bool:
+        def has_content(value):
+            if isinstance(value, str):
+                return bool(value.strip())
+            if isinstance(value, list):
+                return any(has_content(v) for v in value)
+            if isinstance(value, dict):
+                return any(has_content(v) for v in value.values())
+            return False
+
+        return not has_content(data)
+
     def generate_intro(self):
         global CONFIG_LLM
         
         data = self._obtaining_data()
-                
+
+        if self.is_data_empty(data):
+            QMessageBox.warning(
+                self,
+                "Missing data",
+                "Please fill at least one relevant field before generating the introduction."
+            )
+            return
+
         if CONFIG_LLM["api_key"]=="":
             CONFIG_LLM = configure.load_config(CONFIG_LLM_PATH)
             
@@ -860,16 +920,38 @@ class JsonIntroductionEditor(QMainWindow):
                 QDesktopServices.openUrl(QUrl(CONFIG_LLM["usage"]))
                 
                 return
-        
-        try:
-            #print(0/0)
-            out = consultation_in_depth(CONFIG_LLM, data)
-            show_info_dialog(out, title_message="LLM response:")
-        
-        except Exception as e:
-            # Capture any exception and display the error
-            error_message = f"Error: {str(e)}\n\nDetails:\n{traceback.format_exc()}"
-            show_error_dialog(error_message)
+
+        # Feedback visual
+        self.status.showMessage("Consulting LLM… please wait")
+        self.generate_intro_action.setEnabled(False)
+
+        # Thread
+        self.thread = QThread()
+        self.worker = ConsultationWorker(CONFIG_LLM, data)
+
+        self.worker.moveToThread(self.thread)
+
+        # Conexões
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.on_intro_ready)
+        self.worker.error.connect(self.on_intro_error)
+
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.thread.start()
+
+    def on_intro_ready(self, out):
+        self.generate_intro_action.setEnabled(True)
+        self.status.showMessage("Done")
+        show_info_dialog(out, title_message="LLM response:")
+
+    def on_intro_error(self, error_msg):
+        self.generate_intro_action.setEnabled(True)
+        self.status.showMessage("Error")
+        show_error_dialog(error_msg)
+
 # ---------- Main ----------
 
 def main():

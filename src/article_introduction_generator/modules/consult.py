@@ -30,9 +30,11 @@ USER_PROMPT = """
 Using the JSON below, write the complete INTRODUCTION section of the paper.
 
 Structural requirements:
-- Paragraph 1: Broad research domain overview and importance
+- Paragraph 1: General context of the topic. 
+  Broad research domain overview and importance
   (use research_problem.research_domain_overview).
-- Paragraph 2: Narrow down to the specific problem and practical challenges
+- Paragraph 2: Specific problem within the topic that the text focuses on.
+  Narrow down to the specific problem and practical challenges
   (use research_problem.specific_problem and practical_challenges).
 - Paragraphs 3–4: Integrated state of the art discussion.
   Organize cited works according to their introduction_paragraph_role
@@ -41,7 +43,8 @@ Structural requirements:
   Use LaTeX-style bibliographic formatting for citations in the bibliography.
 - Paragraph 5: Synthesize common trends and open problems using
   related_work.human_curated_synthesis.
-- Final paragraph: Explicitly state the research gap and position the paper’s
+- Final paragraph: Proposed solution of paper. 
+  Explicitly state the research gap and position the paper’s
   contributions as a response to this gap.
 
 Use the author_intended_summary to guide emphasis and narrative flow.
