@@ -1,6 +1,6 @@
 # about.py
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __package__ = "article_introduction_generator"
 __program_name__ = "article-introduction-generator"
 __author__ = "Fernando Pujaico Rivera" 
