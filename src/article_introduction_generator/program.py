@@ -792,7 +792,7 @@ class JsonIntroductionEditor(QMainWindow):
     def load_json(self):
         self._save_current_reference()
 
-        path, _ = QFileDialog.getOpenFileName(self, "Load JSON", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getOpenFileName(self, "Load JSON", "", "JSON Files (*.intro.json)")
         if not path:
             return
 
@@ -871,13 +871,23 @@ class JsonIntroductionEditor(QMainWindow):
         }
         
         return data
-        
+
+    def ensure_intro_json(self, path: str) -> str:
+        if path.endswith(".intro.json"):
+            return path
+        elif path.endswith(".json"):
+            return path[:-5] + ".intro.json"  # remove ".json"
+        else:
+            return path + ".intro.json"
+
     def save_as_json(self):
 
-        path, _ = QFileDialog.getSaveFileName(self, "Save JSON", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getSaveFileName(self, "Save JSON", "", "JSON Files (*.intro.json)")
         if not path:
             return
-
+        
+        path = self.ensure_intro_json(path)
+        
         data = self._obtaining_data()
 
         with open(path, "w", encoding="utf-8") as f:
