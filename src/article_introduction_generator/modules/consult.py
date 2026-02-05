@@ -21,6 +21,7 @@ Strict rules:
 7. Do NOT describe the JSON or its structure in the output.
 8. Follow all instructions contained in the "writing_guidelines" field if present.
 9. Do not use exactly the same text sent in JSON, try to use your own words to avoid plagiarism problems.
+10. Avoid writing texts with redundant information.
 
 You must write as a human researcher, not as an assistant.
 
@@ -50,6 +51,8 @@ Structural requirements:
 Use the author_intended_summary to guide emphasis and narrative flow.
 Integrate the contributions naturally into the motivation, not as a list.
 
+- When writing the introduction you must remember that it is a scientific article, therefore it is very important that there must not be texts with redundant information, it must be concise and clear.
+
 Here is the JSON input:
 
 """
@@ -70,3 +73,18 @@ def consultation_in_depth(system_data, json_data):
                                 msg,
                                 SYSTEM_PROMPT)
     return OUT
+    
+def consultation_in_text(json_data):
+
+    json_data_string = json.dumps(
+        json_data,
+        ensure_ascii=False,  # mantém acentos
+        indent=2              # deixa bonito e legível
+    )
+    
+    msg  = "System PROMPT:\n" 
+    msg += SYSTEM_PROMPT + "\n"
+    msg += "User PROMPT:\n" 
+    msg += USER_PROMPT + "```json\n" + json_data_string + "\n```"
+    
+    return msg

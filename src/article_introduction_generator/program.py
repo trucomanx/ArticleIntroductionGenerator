@@ -18,11 +18,11 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 import article_introduction_generator.about as about
 import article_introduction_generator.modules.configure as configure 
-from   article_introduction_generator.modules.wabout  import show_about_window
+from   article_introduction_generator.modules.resources import resource_path
+from   article_introduction_generator.modules.wabout    import show_about_window
 from   article_introduction_generator.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
 
-
-from article_introduction_generator.modules.consult import consultation_in_depth
+from article_introduction_generator.modules.consult import consultation_in_depth, consultation_in_text
 
 # ---------- Path to config file ----------
 CONFIG_PATH = os.path.join( os.path.expanduser("~"),
@@ -312,8 +312,7 @@ class JsonIntroductionEditor(QMainWindow):
 
         ## Icon
         # Get base directory for icons
-        base_dir_path = os.path.dirname(os.path.abspath(__file__))
-        self.icon_path = os.path.join(base_dir_path, 'icons', 'logo.png')
+        self.icon_path = resource_path('icons', 'logo.png')
         self.setWindowIcon(QIcon(self.icon_path)) 
 
         self.current_path = None
@@ -392,6 +391,12 @@ class JsonIntroductionEditor(QMainWindow):
         self.generate_intro_action.setToolTip("Generate introduction")
         self.generate_intro_action.triggered.connect(self.generate_intro)
         self.toolbar.addAction(self.generate_intro_action)
+        
+        #
+        self.generate_cmd_action = QAction(QIcon.fromTheme("document-edit"), "Generate prompt.", self)
+        self.generate_cmd_action.setToolTip("Generate query message. This message can be pasted into any LLM chat.")
+        self.generate_cmd_action.triggered.connect(self.generate_cmd)
+        self.toolbar.addAction(self.generate_cmd_action)
         
         # Adicionar o espaçador
         spacer = QWidget()
@@ -908,6 +913,24 @@ class JsonIntroductionEditor(QMainWindow):
 
         return not has_content(data)
 
+    def generate_cmd(self):
+        data = self._obtaining_data()
+
+        if self.is_data_empty(data):
+            QMessageBox.warning(
+                self,
+                "Missing data",
+                "Please fill at least one relevant field before generating the introduction."
+            )
+            return
+            
+        prompt = consultation_in_text(data)
+        
+        show_info_dialog(   prompt, 
+                        title_message = "Prompt", 
+                        width = 800,
+                        height = 600 )
+    
     def generate_intro(self):
         global CONFIG_LLM
         

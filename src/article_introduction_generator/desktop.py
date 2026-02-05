@@ -1,6 +1,7 @@
 import os
-import article_introduction_generator.about as about
 import subprocess
+import article_introduction_generator.about as about
+from article_introduction_generator.modules.resources import resource_path
 
 
 def update_desktop_database(desktop_path):
@@ -17,8 +18,8 @@ def update_desktop_database(desktop_path):
         print("The command 'update-desktop-database' was not found. Verify that the package 'desktop-file-utils' is installed.")
 
 def create_desktop_file(desktop_path, overwrite=False, program_name=None):
-    base_dir_path = os.path.dirname(os.path.abspath(__file__))
-    icon_path = os.path.join(base_dir_path, 'icons', 'logo.png')
+
+    icon_path = resource_path('icons', 'logo.png')
 
     if program_name is None:
         __program_name = about.__program_name__
