@@ -1,6 +1,6 @@
 # article-introduction-generator
 
-Program to generate an introduction from a JSON File
+Program to generate a prose-style introductory text from a structured JSON file.
 
 ## Testar program
 

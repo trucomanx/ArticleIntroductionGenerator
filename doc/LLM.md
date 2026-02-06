@@ -1,11 +1,14 @@
+# article-introduction-generator
 
-# LLM
+Program to generate a prose-style introductory text from a structured JSON file.
+
+## LLM
 
 The program needs an API_KEY to be used. This can be obtained from [https://deepinfra.com/dash/api_keys](https://deepinfra.com/dash/api_keys).
 
 Place the obtained API_KEY in the program using the toolbar >> **LLM Config**.
 
-# Models and prices  
+## Models and prices  
 
 THe models that can be used ar listed in the url [https://deepinfra.com/models/text-generation](https://deepinfra.com/models/text-generation)
 

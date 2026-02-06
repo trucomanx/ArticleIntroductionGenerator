@@ -1,3 +1,7 @@
+# article-introduction-generator
+
+Program to generate a prose-style introductory text from a structured JSON file.
+
 # 1. Recommended JSON Structure
 
 High level fields
