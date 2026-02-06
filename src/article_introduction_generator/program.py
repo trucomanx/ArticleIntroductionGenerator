@@ -7,7 +7,7 @@ import traceback
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QTextEdit, QLineEdit, QPushButton, QFileDialog,
+    QLabel, QTextEdit, QLineEdit, QPushButton, QFileDialog, QFrame, 
     QTabWidget, QListWidget, QMessageBox, QStatusBar, QToolBar,
     QComboBox, QScrollArea, QListWidgetItem, QSizePolicy, QAction, QDialog
 )
@@ -30,19 +30,112 @@ CONFIG_PATH = os.path.join( os.path.expanduser("~"),
                             about.__package__, 
                             "config.json" )
 
-DEFAULT_CONTENT={   "toolbar_llm_conf": "LLM Conf.",
-                    "toolbar_llm_conf_tooltip": "Open the configure Json file of LLM",
-                    "toolbar_url_usage": "LLM Usage",
-                    "toolbar_url_usage_tooltip": "Open the web page that shows the data usage and cost.",
-                    "toolbar_configure": "Configure",
-                    "toolbar_configure_tooltip": "Open the configure Json file of program GUI",
-                    "toolbar_about": "About",
-                    "toolbar_about_tooltip": "About the program",
-                    "toolbar_coffee": "Coffee",
-                    "toolbar_coffee_tooltip": "Buy me a coffee (TrucomanX)",
-                    "window_width": 1024,
-                    "window_height": 800
-                }
+DEFAULT_CONTENT={   
+    "toolbar_load_json": "Load JSON",
+    "toolbar_load_json_tooltip": "Load data from a JSON file with the *.intro.json extension.",
+    "toolbar_save_as": "Save as JSON",
+    "toolbar_save_as_tooltip": "Save all data as a JSON file with the extension *.intro.json.",
+    "toolbar_gen_intro": "Generate intro.",
+    "toolbar_gen_intro_tooltip": "Generate an introduction using an LLM API key. Before using this button, you need to configure your LLM API key.",
+    "toolbar_gen_prompt": "Generate prompt",
+    "toolbar_gen_prompt_tooltip": "Generate only the query message (prompt). You don’t need to provide an API key or configure the LLM. This prompt can be pasted into any preferred LLM chat interface.",
+    "toolbar_llm_conf": "LLM Conf.",
+    "toolbar_llm_conf_tooltip": "Open the configure Json file of LLM.",
+    "toolbar_url_usage": "LLM Usage",
+    "toolbar_url_usage_tooltip": "Open the web page that shows the data usage and cost.",
+    "toolbar_configure": "Configure",
+    "toolbar_configure_tooltip": "Open the configure Json file of program GUI",
+    "toolbar_about": "About",
+    "toolbar_about_tooltip": "About the program",
+    "toolbar_coffee": "Coffee",
+    "toolbar_coffee_tooltip": "Buy me a coffee (TrucomanX)",
+    "tab_paper_profile": "1. Paper Profile",
+    "tab_paper_profile_tooltip": "Basic information about the paper",
+    "tab_research_problem": "2. Research Problem",
+    "tab_research_problem_tooltip": "Define the research problem and motivation of paper",
+    "tab_contributions": "3. Contributions",
+    "tab_contributions_tooltip": "Main scientific contributions of paper",
+    "tab_related_work": "4. Related Work",
+    "tab_related_work_tooltip": "Related works and literature review",
+    "tab_writing_guidelines": "5. LLM writing Guidelines",
+    "tab_writing_guidelines_tooltip": "Writing rules and formatting guidelines in LLM introduction generation",
+    "profile_title": "Title",
+    "profile_title_tooltip": "Full paper title.",
+    "profile_domain": "Domain",
+    "profile_domain_tooltip": "Research domain, e.g., Computer Vision, NLP, Systems.",
+    "profile_journal": "Target Journal",
+    "profile_journal_tooltip": "Intended journal (IEEE, Elsevier, ACM, etc.).",
+    "profile_keywords": "Keywords",
+    "profile_keywords_tooltip": "High-level keywords describing the paper.",
+    "profile_summary": "Author Intended Summary",
+    "profile_summary_tooltip": "Human-written summary describing what the paper does and why.",
+    "research_overview": "Research Domain Overview",
+    "research_overview_tooltip": "General overview of the research domain and its importance.",
+    "research_specific": "Specific Problem",
+    "research_specific_tooltip": "Precise formulation of the problem addressed.",
+    "research_challenges": "Practical Challenges",
+    "research_challenges_tooltip": "Key practical or theoretical challenges.",
+    "research_insufficient": "Why Existing Solutions Are Insufficient",
+    "research_insufficient_tooltip": "High-level human assessment without citing specific papers.",
+    "contributions_list": "Contributions",
+    "contributions_list_tooltip": "Main contributions of the paper, one per entry.",
+    "related_references": "References",
+    "related_references_tooltip": "References used in the article" ,
+    "related_references_bibtex": "BibTeX", 
+    "related_references_bibtex_tooltip": "BibTeX entry. This is the only source for citations.",
+    "related_references_abstract": "Abstract",
+    "related_references_abstract_tooltip": "Original abstract of the cited paper.",
+    "related_references_methodological": "Methodological Category", 
+    "related_references_methodological_tooltip": "e.g., deep_learning, transformer_based, graph_based.",
+    "related_references_idea": "Central Technical Idea", 
+    "related_references_idea_tooltip": "Main technical idea introduced by this work.",
+    "related_references_strengths": "Author Reported Strengths", 
+    "related_references_strengths_tooltip": "Strengths explicitly claimed by the original authors.",
+    "related_references_limitations": "Reported Limitations", 
+    "related_references_limitations_tooltip": "Limitations discussed or implied by the paper.",
+    "related_references_relevance": "Relevance to Our Work", 
+    "related_references_relevance_tooltip": "How this work relates to and differs from our paper.",
+    "related_references_role": "Introduction Paragraph Role", 
+    "related_references_role_tooltip": "foundational, early_state_of_art, recent_advances, etc.",
+    "related_references_add": "Add Reference",
+    "related_references_remove": "Remove Reference",
+    "related_references_invalid_key": "Invalid name",
+    "related_references_invalid_key_tip": "Reference key cannot be empty.",
+    "related_references_duplicate_key": "Duplicate key",
+    "related_references_duplicate_key_tip": "This reference key already exists.",
+    "related_synthesis": "Human Curated Synthesis",
+    "related_synthesis_tooltip": "Synthesis of your trends and observations from the references",
+    "related_synthesis_trends": "Common Trends",
+    "related_synthesis_trends_tooltip": "Observed trends across the literature.",
+    "related_synthesis_problems": "Open Problems",
+    "related_synthesis_problems_tooltip": "Unresolved problems identified by the author.",
+    "related_synthesis_gaps": "Explicit Research Gap",
+    "related_synthesis_gaps_tooltip": "Clear formulation of the research gap addressed by the paper.",
+    "guidelines_entry": "Writing Guidelines",
+    "guidelines_entry_tooltip": "Explicit instructions to be followed by the LLM when generating text.",
+    "error_missing_data": "Missing data",
+    "error_missing_data_msg": "Please fill at least one relevant field before generating the introduction.",
+    "message_error": "Error",
+    "message_information": "Information",
+    "message_done": "Done",
+    "message_open": "Open",
+    "message_prompt": "Prompt",
+    "message_saved_to": "Saved to",
+    "message_loaded_from": "Loaded from",
+    "message_llm_response": "LLM response",
+    "message_llm_consulting": "Consulting LLM… please wait",
+    "message_dialog_error": "An error occurred",
+    "message_dialog_information": "Information message",
+    "message_dialog_ok": "OK",
+    "message_dialog_copy_clipboard": "Copy to clipboard",
+    "list_editor_placeholder": "Click 'Add' to insert a new entry",
+    "list_editor_add": "Add",
+    "list_editor_add_tooltip": "Add an element to the list",
+    "list_editor_remove": "Remove",
+    "list_editor_remove_tooltip": "Remove an element to the list",
+    "window_width": 1024,
+    "window_height": 800
+}
 
 configure.verify_default_config(CONFIG_PATH,default_content=DEFAULT_CONTENT)
 
@@ -135,16 +228,15 @@ class MessageDialog(QDialog):
         clipboard = QApplication.clipboard()
         clipboard.setText(self.text_edit.toPlainText())
 
-
 def show_error_dialog(  message, 
-                        title_message = "An error occurred:", 
+                        title_message = CONFIG["message_dialog_error"], 
                         width = 800,
                         height = 600 ):
     dialog = MessageDialog( message, 
-                            window_title = "Error message", 
+                            window_title = CONFIG["message_error"], 
                             title_message = title_message,
-                            button_ok_text = "OK",
-                            button_copy_text = "Copy to clipboard",
+                            button_ok_text = CONFIG["message_dialog_ok"],
+                            button_copy_text = CONFIG["message_dialog_copy_clipboard"],
                             width = width,
                             height = height
     )
@@ -152,14 +244,14 @@ def show_error_dialog(  message,
     dialog.exec_()
     
 def show_info_dialog(   message, 
-                        title_message = "", 
+                        title_message = CONFIG["message_dialog_information"], 
                         width = 800,
                         height = 600 ):
     dialog = MessageDialog( message, 
-                            window_title = "Information message", 
+                            window_title = CONFIG["message_information"], 
                             title_message = title_message,
-                            button_ok_text = "OK",
-                            button_copy_text = "Copy to clipboard",
+                            button_ok_text = CONFIG["message_dialog_ok"],
+                            button_copy_text = CONFIG["message_dialog_copy_clipboard"],
                             width = width,
                             height = height
     )
@@ -213,7 +305,7 @@ class StringListEditor(QWidget):
         title.setToolTip(tooltip)
         self.list = QListWidget()
         
-        placeholder = QListWidgetItem("Click 'Add' to insert a new entry")
+        placeholder = QListWidgetItem(CONFIG["list_editor_placeholder"])
         placeholder.setFlags(Qt.NoItemFlags)  # não selecionável / não editável
         placeholder.setForeground(Qt.gray)
         self.list.addItem(placeholder)
@@ -221,10 +313,12 @@ class StringListEditor(QWidget):
         self.list.setToolTip(tooltip)
 
         btn_layout = QHBoxLayout()
-        add_btn = QPushButton("Add")
+        add_btn = QPushButton(CONFIG["list_editor_add"])
         add_btn.setIcon(QIcon.fromTheme("list-add"))
-        remove_btn = QPushButton("Remove")
+        add_btn.setToolTip(CONFIG["list_editor_add_tooltip"])
+        remove_btn = QPushButton(CONFIG["list_editor_remove"])
         remove_btn.setIcon(QIcon.fromTheme("list-remove"))
+        remove_btn.setToolTip(CONFIG["list_editor_remove_tooltip"])
         btn_layout.addWidget(add_btn)
         btn_layout.addWidget(remove_btn)
 
@@ -293,7 +387,7 @@ class StringListEditor(QWidget):
 
 
     def _add_placeholder(self):
-        placeholder = QListWidgetItem("Click 'Add' to insert a new entry")
+        placeholder = QListWidgetItem(CONFIG["list_editor_placeholder"])
         placeholder.setFlags(Qt.NoItemFlags)
         placeholder.setForeground(Qt.gray)
         self.list.addItem(placeholder)
@@ -375,26 +469,34 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
 
         #
-        self.load_action = QAction(QIcon.fromTheme("document-open"), "Load JSON", self)
-        self.load_action.setToolTip("load JSON")
+        self.load_action = QAction( QIcon.fromTheme("document-open"), 
+                                    CONFIG["toolbar_load_json"], 
+                                    self )
+        self.load_action.setToolTip(CONFIG["toolbar_load_json_tooltip"])
         self.load_action.triggered.connect(self.load_json)
         self.toolbar.addAction(self.load_action)
         
         #
-        self.save_as_action = QAction(QIcon.fromTheme("document-save-as"), "Save as JSON", self)
-        self.save_as_action.setToolTip("save as")
+        self.save_as_action = QAction(  QIcon.fromTheme("document-save-as"), 
+                                        CONFIG["toolbar_save_as"], 
+                                        self)
+        self.save_as_action.setToolTip(CONFIG["toolbar_save_as_tooltip"])
         self.save_as_action.triggered.connect(self.save_as_json)
         self.toolbar.addAction(self.save_as_action)
         
         #
-        self.generate_intro_action = QAction(QIcon.fromTheme("emblem-generic"), "Generate intro.", self)
-        self.generate_intro_action.setToolTip("Generate introduction")
+        self.generate_intro_action = QAction(   QIcon.fromTheme("emblem-generic"), 
+                                                CONFIG["toolbar_gen_intro"], 
+                                                self)
+        self.generate_intro_action.setToolTip(CONFIG["toolbar_gen_intro_tooltip"])
         self.generate_intro_action.triggered.connect(self.generate_intro)
         self.toolbar.addAction(self.generate_intro_action)
         
         #
-        self.generate_cmd_action = QAction(QIcon.fromTheme("document-edit"), "Generate prompt.", self)
-        self.generate_cmd_action.setToolTip("Generate query message. This message can be pasted into any LLM chat.")
+        self.generate_cmd_action = QAction( QIcon.fromTheme("document-edit"), 
+                                            CONFIG["toolbar_gen_prompt"], 
+                                            self)
+        self.generate_cmd_action.setToolTip(CONFIG["toolbar_gen_prompt_tooltip"])
         self.generate_cmd_action.triggered.connect(self.generate_cmd)
         self.toolbar.addAction(self.generate_cmd_action)
         
@@ -404,31 +506,47 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addWidget(spacer)
         
         #
-        self.llm_conf_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["toolbar_llm_conf"], self)
+        self.llm_conf_action = QAction( QIcon.fromTheme("document-properties"), 
+                                        CONFIG["toolbar_llm_conf"], 
+                                        self)
         self.llm_conf_action.setToolTip(CONFIG["toolbar_llm_conf_tooltip"])
         self.llm_conf_action.triggered.connect(self.open_llm_conf_editor)
         self.toolbar.addAction(self.llm_conf_action)
         
         #
-        self.url_usage_action = QAction(QIcon.fromTheme("emblem-web"), CONFIG["toolbar_url_usage"], self)
+        self.url_usage_action = QAction(QIcon.fromTheme("emblem-web"), 
+                                        CONFIG["toolbar_url_usage"], 
+                                        self)
         self.url_usage_action.setToolTip(CONFIG["toolbar_url_usage_tooltip"])
         self.url_usage_action.triggered.connect(self.open_url_usage_editor)
         self.toolbar.addAction(self.url_usage_action)
         
+        # Adicionar o espaçador
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Plain) # QFrame.Raised # QFrame.Sunken
+        self.toolbar.addWidget(separator)
+        
         #
-        self.configure_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["toolbar_configure"], self)
+        self.configure_action = QAction(QIcon.fromTheme("document-properties"), 
+                                        CONFIG["toolbar_configure"], 
+                                        self)
         self.configure_action.setToolTip(CONFIG["toolbar_configure_tooltip"])
         self.configure_action.triggered.connect(self.open_configure_editor)
         self.toolbar.addAction(self.configure_action)
         
         #
-        self.about_action = QAction(QIcon.fromTheme("help-about"), CONFIG["toolbar_about"], self)
+        self.about_action = QAction(QIcon.fromTheme("help-about"), 
+                                    CONFIG["toolbar_about"], 
+                                    self)
         self.about_action.setToolTip(CONFIG["toolbar_about_tooltip"])
         self.about_action.triggered.connect(self.open_about)
         self.toolbar.addAction(self.about_action)
         
         # Coffee
-        self.coffee_action = QAction(QIcon.fromTheme("emblem-favorite"), CONFIG["toolbar_coffee"], self)
+        self.coffee_action = QAction(   QIcon.fromTheme("emblem-favorite"), 
+                                        CONFIG["toolbar_coffee"], 
+                                        self)
         self.coffee_action.setToolTip(CONFIG["toolbar_coffee_tooltip"])
         self.coffee_action.triggered.connect(self.on_coffee_action_click)
         self.toolbar.addAction(self.coffee_action)
@@ -478,14 +596,24 @@ class JsonIntroductionEditor(QMainWindow):
         return scroll
 
     def _create_tabs(self):
-        self.tabs.addTab(self._wrap_scroll(self._paper_profile_tab()), "Paper Profile")
-        self.tabs.addTab(self._wrap_scroll(self._research_problem_tab()), "Research Problem")
-        self.tabs.addTab(self._wrap_scroll(self._contributions_tab()), "Contributions")
-        self.tabs.addTab(self._related_work_tab(), "Related Work")
-        self.tabs.addTab(self._wrap_scroll(self._writing_guidelines_tab()), "Writing Guidelines")
+        self.tabs.addTab(   self._wrap_scroll(self._paper_profile_tab()), 
+                            CONFIG["tab_paper_profile"] )
+        self.tabs.addTab(   self._wrap_scroll(self._research_problem_tab()), 
+                            CONFIG["tab_research_problem"] )
+        self.tabs.addTab(   self._wrap_scroll(self._contributions_tab()), 
+                            CONFIG["tab_contributions"] )
+        self.tabs.addTab(   self._related_work_tab(), 
+                            CONFIG["tab_related_work"] )
+        self.tabs.addTab(   self._wrap_scroll(self._writing_guidelines_tab()), 
+                            CONFIG["tab_writing_guidelines"] )
+        
+        self.tabs.setTabToolTip(0, CONFIG["tab_paper_profile_tooltip"])
+        self.tabs.setTabToolTip(1, CONFIG["tab_research_problem_tooltip"])
+        self.tabs.setTabToolTip(2, CONFIG["tab_contributions_tooltip"])
+        self.tabs.setTabToolTip(3, CONFIG["tab_related_work_tooltip"])
+        self.tabs.setTabToolTip(4, CONFIG["tab_writing_guidelines_tooltip"])
         
         self.tabs.currentChanged.connect(self._on_tab_changed)
-
 
     # ---------- Tabs ----------
 
@@ -496,26 +624,16 @@ class JsonIntroductionEditor(QMainWindow):
         w = QWidget()
         layout = QVBoxLayout()
 
-        self.pp_title = LabeledLineEdit(
-            "Title",
-            "Full paper title."
-        )
-        self.pp_domain = LabeledLineEdit(
-            "Domain",
-            "Research domain, e.g., Computer Vision, NLP, Systems."
-        )
-        self.pp_journal = LabeledLineEdit(
-            "Target Journal",
-            "Intended journal (IEEE, Elsevier, ACM, etc.)."
-        )
-        self.pp_keywords = StringListEditor(
-            "Keywords",
-            "High-level keywords describing the paper."
-        )
-        self.pp_summary = LabeledTextEdit(
-            "Author Intended Summary",
-            "Human-written summary describing what the paper does and why."
-        )
+        self.pp_title    = LabeledLineEdit( CONFIG["profile_title"], 
+                                            CONFIG["profile_title_tooltip"] )
+        self.pp_domain   = LabeledLineEdit( CONFIG["profile_domain"], 
+                                            CONFIG["profile_domain_tooltip"] )
+        self.pp_journal  = LabeledLineEdit( CONFIG["profile_journal"], 
+                                            CONFIG["profile_journal_tooltip"] )
+        self.pp_keywords = StringListEditor(CONFIG["profile_keywords"], 
+                                            CONFIG["profile_keywords_tooltip"] )
+        self.pp_summary  = LabeledTextEdit( CONFIG["profile_summary"], 
+                                            CONFIG["profile_summary_tooltip"] )
 
         for wdg in [self.pp_title, self.pp_domain, self.pp_journal, self.pp_keywords, self.pp_summary]:
             layout.addWidget(wdg)
@@ -527,22 +645,14 @@ class JsonIntroductionEditor(QMainWindow):
         w = QWidget()
         layout = QVBoxLayout()
 
-        self.rp_overview = LabeledTextEdit(
-            "Research Domain Overview",
-            "General overview of the research domain and its importance."
-        )
-        self.rp_specific = LabeledTextEdit(
-            "Specific Problem",
-            "Precise formulation of the problem addressed."
-        )
-        self.rp_challenges = StringListEditor(
-            "Practical Challenges",
-            "Key practical or theoretical challenges."
-        )
-        self.rp_insufficient = LabeledTextEdit(
-            "Why Existing Solutions Are Insufficient",
-            "High-level human assessment without citing specific papers."
-        )
+        self.rp_overview = LabeledTextEdit( CONFIG["research_overview"], 
+                                            CONFIG["research_overview_tooltip"] )
+        self.rp_specific = LabeledTextEdit( CONFIG["research_specific"], 
+                                            CONFIG["research_specific_tooltip"] )
+        self.rp_challenges = StringListEditor(  CONFIG["research_challenges"], 
+                                                CONFIG["research_challenges_tooltip"] )
+        self.rp_insufficient = LabeledTextEdit( CONFIG["research_insufficient"], 
+                                                CONFIG["research_insufficient_tooltip"] )
 
         for wdg in [self.rp_overview, self.rp_specific, self.rp_challenges, self.rp_insufficient]:
             layout.addWidget(wdg)
@@ -554,10 +664,8 @@ class JsonIntroductionEditor(QMainWindow):
         w = QWidget()
         layout = QVBoxLayout()
 
-        self.contributions = StringListEditor(
-            "Contributions",
-            "Main contributions of the paper, one per entry."
-        )
+        self.contributions = StringListEditor(  CONFIG["contributions_list"], 
+                                                CONFIG["contributions_list_tooltip"])
 
         layout.addWidget(self.contributions)
         w.setLayout(layout)
@@ -565,8 +673,14 @@ class JsonIntroductionEditor(QMainWindow):
 
     def _related_work_tab(self):
         tabs = QTabWidget()
-        tabs.addTab(self._references_tab(), "References")
-        tabs.addTab(self._wrap_scroll(self._synthesis_tab()), "Human Curated Synthesis")
+        tabs.addTab(self._references_tab(), 
+                    CONFIG["related_references"] )
+        tabs.addTab(self._wrap_scroll(self._synthesis_tab()), 
+                    CONFIG["related_synthesis"] )
+        
+        tabs.setTabToolTip(0, CONFIG["related_references_tooltip"])
+        tabs.setTabToolTip(1, CONFIG["related_synthesis_tooltip"])
+        
         return tabs
 
     def _references_tab(self):
@@ -589,14 +703,22 @@ class JsonIntroductionEditor(QMainWindow):
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
 
-        self.ref_bibtex = LabeledTextEdit("BibTeX", "BibTeX entry. This is the only source for citations.")
-        self.ref_abstract = LabeledTextEdit("Abstract", "Original abstract of the cited paper.")
-        self.ref_category = LabeledLineEdit("Methodological Category", "e.g., deep_learning, transformer_based, graph_based.")
-        self.ref_contribution = LabeledTextEdit("Central Technical Idea", "Main technical idea introduced by this work.")
-        self.ref_strengths = StringListEditor("Author Reported Strengths", "Strengths explicitly claimed by the original authors.")
-        self.ref_limitations = StringListEditor("Reported Limitations", "Limitations discussed or implied by the paper.")
-        self.ref_relevance = LabeledTextEdit("Relevance to Our Work", "How this work relates to and differs from our paper.")
-        self.ref_role = LabeledLineEdit("Introduction Paragraph Role", "foundational, early_state_of_art, recent_advances, etc.")
+        self.ref_bibtex = LabeledTextEdit(  CONFIG["related_references_bibtex"], 
+                                            CONFIG["related_references_bibtex_tooltip"] )
+        self.ref_abstract = LabeledTextEdit(CONFIG["related_references_abstract"], 
+                                            CONFIG["related_references_abstract_tooltip"] )
+        self.ref_category = LabeledLineEdit(CONFIG["related_references_methodological"], 
+                                            CONFIG["related_references_methodological_tooltip"] )
+        self.ref_contribution = LabeledTextEdit(CONFIG["related_references_idea"], 
+                                                CONFIG["related_references_idea_tooltip"] )
+        self.ref_strengths = StringListEditor(  CONFIG["related_references_strengths"], 
+                                                CONFIG["related_references_strengths_tooltip"] )
+        self.ref_limitations = StringListEditor(CONFIG["related_references_limitations"], 
+                                                CONFIG["related_references_limitations_tooltip"] )
+        self.ref_relevance = LabeledTextEdit(   CONFIG["related_references_relevance"], 
+                                                CONFIG["related_references_relevance_tooltip"] )
+        self.ref_role = LabeledLineEdit(CONFIG["related_references_role"], 
+                                        CONFIG["related_references_role_tooltip"] )
 
         for wdg in [
             self.ref_bibtex, self.ref_abstract, self.ref_category,
@@ -616,11 +738,11 @@ class JsonIntroductionEditor(QMainWindow):
         # ---- Botões fora do scroll ----
         btns = QHBoxLayout()
 
-        add = QPushButton("Add Reference")
+        add = QPushButton(CONFIG["related_references_add"])
         add.setIcon(QIcon.fromTheme("list-add"))
         add.setIconSize(QSize(32, 32))
 
-        remove = QPushButton("Remove Reference")
+        remove = QPushButton(CONFIG["related_references_remove"])
         remove.setIcon(QIcon.fromTheme("list-remove"))
         remove.setIconSize(QSize(32, 32))
 
@@ -645,14 +767,18 @@ class JsonIntroductionEditor(QMainWindow):
             return
 
         if not new_key:
-            QMessageBox.warning(self, "Invalid name", "Reference key cannot be empty.")
+            QMessageBox.warning(self, 
+                                CONFIG["related_references_invalid_key"], 
+                                CONFIG["related_references_invalid_key_tip"])
             self.ref_list.blockSignals(True)
             item.setText(old_key)
             self.ref_list.blockSignals(False)
             return
 
         if new_key in self.references_data and new_key != old_key:
-            QMessageBox.warning(self, "Duplicate key", "This reference key already exists.")
+            QMessageBox.warning(self, 
+                                CONFIG["related_references_duplicate_key"], 
+                                CONFIG["related_references_duplicate_key_tip"])
             self.ref_list.blockSignals(True)
             item.setText(old_key)
             self.ref_list.blockSignals(False)
@@ -668,18 +794,12 @@ class JsonIntroductionEditor(QMainWindow):
         w = QWidget()
         layout = QVBoxLayout()
 
-        self.syn_trends = StringListEditor(
-            "Common Trends",
-            "Observed trends across the literature."
-        )
-        self.syn_open = StringListEditor(
-            "Open Problems",
-            "Unresolved problems identified by the author."
-        )
-        self.syn_gap = LabeledTextEdit(
-            "Explicit Research Gap",
-            "Clear formulation of the research gap addressed by the paper."
-        )
+        self.syn_trends = StringListEditor( CONFIG["related_synthesis_trends"], 
+                                            CONFIG["related_synthesis_trends_tooltip"] )
+        self.syn_open = StringListEditor(   CONFIG["related_synthesis_problems"],
+                                            CONFIG["related_synthesis_problems_tooltip"] )
+        self.syn_gap = LabeledTextEdit( CONFIG["related_synthesis_gaps"],
+                                        CONFIG["related_synthesis_gaps_tooltip"] )
 
         for wdg in [self.syn_trends, self.syn_open, self.syn_gap]:
             layout.addWidget(wdg)
@@ -691,10 +811,7 @@ class JsonIntroductionEditor(QMainWindow):
         w = QWidget()
         layout = QVBoxLayout()
 
-        self.wg = LabeledTextEdit(
-            "Writing Guidelines",
-            "Explicit instructions to be followed by the LLM when generating text."
-        )
+        self.wg = LabeledTextEdit( CONFIG["guidelines_entry"], CONFIG["guidelines_entry_tooltip"] )
 
         layout.addWidget(self.wg)
         w.setLayout(layout)
@@ -797,7 +914,7 @@ class JsonIntroductionEditor(QMainWindow):
     def load_json(self):
         self._save_current_reference()
 
-        path, _ = QFileDialog.getOpenFileName(self, "Load JSON", "", "JSON Files (*.intro.json)")
+        path, _ = QFileDialog.getOpenFileName(self, CONFIG["toolbar_load_json"], "", "JSON Files (*.intro.json)")
         if not path:
             return
 
@@ -805,7 +922,7 @@ class JsonIntroductionEditor(QMainWindow):
             data = json.load(f)
 
         self.current_path = path
-        self.status.showMessage(f"Loaded from {path}")
+        self.status.showMessage(CONFIG["message_loaded_from"]+": "+path)
 
         # ---- Paper Profile ----
         pp = data.get("paper_profile", {})
@@ -887,7 +1004,7 @@ class JsonIntroductionEditor(QMainWindow):
 
     def save_as_json(self):
 
-        path, _ = QFileDialog.getSaveFileName(self, "Save JSON", "", "JSON Files (*.intro.json)")
+        path, _ = QFileDialog.getSaveFileName(self, CONFIG["toolbar_save_as"], "", "JSON Files (*.intro.json)")
         if not path:
             return
         
@@ -899,7 +1016,7 @@ class JsonIntroductionEditor(QMainWindow):
             json.dump(data, f, indent=2)
 
         self.current_path = path
-        self.status.showMessage(f"Saved to {path}")
+        self.status.showMessage(CONFIG["message_saved_to"]+": "+path)
 
     def is_data_empty(self, data: dict) -> bool:
         def has_content(value):
@@ -919,15 +1036,15 @@ class JsonIntroductionEditor(QMainWindow):
         if self.is_data_empty(data):
             QMessageBox.warning(
                 self,
-                "Missing data",
-                "Please fill at least one relevant field before generating the introduction."
+                CONFIG["error_missing_data"],
+                CONFIG["error_missing_data_msg"]
             )
             return
             
         prompt = consultation_in_text(data)
         
         show_info_dialog(   prompt, 
-                        title_message = "Prompt", 
+                        title_message = CONFIG["message_prompt"], 
                         width = 800,
                         height = 600 )
     
@@ -939,8 +1056,8 @@ class JsonIntroductionEditor(QMainWindow):
         if self.is_data_empty(data):
             QMessageBox.warning(
                 self,
-                "Missing data",
-                "Please fill at least one relevant field before generating the introduction."
+                CONFIG["error_missing_data"],
+                CONFIG["error_missing_data_msg"]
             )
             return
 
@@ -948,16 +1065,16 @@ class JsonIntroductionEditor(QMainWindow):
             CONFIG_LLM = configure.load_config(CONFIG_LLM_PATH)
             
             if CONFIG_LLM["api_key"]=="":
-                self.status.showMessage("Open: " + CONFIG_LLM_PATH)
+                self.status.showMessage(CONFIG["message_open"]+": " + CONFIG_LLM_PATH)
                 self._open_file_in_text_editor(CONFIG_LLM_PATH)
                 QDesktopServices.openUrl(QUrl(CONFIG_LLM["usage"]))
                 
                 return
 
         # Feedback visual
-        self.status.showMessage("Consulting LLM… please wait")
+        self.status.showMessage(CONFIG["message_llm_consulting"])
         self.generate_intro_action.setEnabled(False)
-
+        
         # Thread
         self.thread = QThread()
         self.worker = ConsultationWorker(CONFIG_LLM, data)
@@ -977,12 +1094,12 @@ class JsonIntroductionEditor(QMainWindow):
 
     def on_intro_ready(self, out):
         self.generate_intro_action.setEnabled(True)
-        self.status.showMessage("Done")
-        show_info_dialog(out, title_message="LLM response:")
+        self.status.showMessage(CONFIG["message_done"])
+        show_info_dialog(out, title_message=CONFIG["message_llm_response"]+": ")
 
     def on_intro_error(self, error_msg):
         self.generate_intro_action.setEnabled(True)
-        self.status.showMessage("Error")
+        self.status.showMessage(CONFIG["message_error"])
         show_error_dialog(error_msg)
 
 # ---------- Main ----------
