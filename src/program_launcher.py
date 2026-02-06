@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
 '''
-python3 -m venv venv-temporal
-
 ## ubuntu ##
+python3 -m venv venv-temporal
 source venv-temporal/bin/activate
 pip install --upgrade pip
 
 ## windows ##
+python -m venv venv-temporal
 venv-temporal\Scripts\activate
 python -m pip install --upgrade pip
 
