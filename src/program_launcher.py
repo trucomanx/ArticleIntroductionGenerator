@@ -24,6 +24,14 @@ python -m PyInstaller --onefile --windowed --name article_introduction_generator
 
 '''
 
+import os
+from PyQt5.QtCore import QLibraryInfo
+
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(
+    QLibraryInfo.PluginsPath
+)
+
+
 from article_introduction_generator.program import main
 
 if __name__ == "__main__":

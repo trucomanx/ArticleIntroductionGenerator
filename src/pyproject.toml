@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "article_introduction_generator"
+version = "0.1.5"
+description = "Program to generate a prose-style introductory text from a structured JSON file."
+readme = "README.md"
+authors = [{name = "Fernando Pujaico Rivera", email = "fernando.pujaico.rivera@gmail.com"}]
+maintainers = [{name = "Fernando Pujaico Rivera", email = "fernando.pujaico.rivera@gmail.com"}]
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "GPL-3.0-only WITH Classpath-Exception-2.0 OR BSD-3-Clause"
+license-files = ["LICENSE"]
+keywords = ["writing", "article"]
+dependencies = [
+    "PyQt5",
+    "deep-consultation"
+]
+
+[project.urls]
+"Bug Reports" = "https://github.com/trucomanx/ArticleIntroductionGenerator/issues"
+"Funding" = "https://trucomanx.github.io/en/funding.html"
+"Documentation" = "https://github.com/trucomanx/ArticleIntroductionGenerator/tree/main/doc"
+"Source" = "https://github.com/trucomanx/ArticleIntroductionGenerator"
+
+[project.scripts]
+"article-introduction-generator" = "article_introduction_generator.program:main"
+
+[tool.setuptools]
+packages = ["article_introduction_generator", "article_introduction_generator.modules"]
+
+[tool.setuptools.package-data]
+"article_introduction_generator" = ["icons/logo.png"]
