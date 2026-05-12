@@ -314,10 +314,10 @@ class StringListEditor(QWidget):
 
         btn_layout = QHBoxLayout()
         add_btn = QPushButton(CONFIG["list_editor_add"])
-        add_btn.setIcon(QIcon.fromTheme("list-add"))
+        add_btn.setIcon(QIcon(resource_path('icons', 'button_add_green.png')))
         add_btn.setToolTip(CONFIG["list_editor_add_tooltip"])
         remove_btn = QPushButton(CONFIG["list_editor_remove"])
-        remove_btn.setIcon(QIcon.fromTheme("list-remove"))
+        remove_btn.setIcon(QIcon(resource_path('icons', 'button_remove_red.png')))
         remove_btn.setToolTip(CONFIG["list_editor_remove_tooltip"])
         btn_layout.addWidget(add_btn)
         btn_layout.addWidget(remove_btn)
@@ -469,7 +469,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
 
         #
-        self.load_action = QAction( QIcon.fromTheme("document-open"), 
+        self.load_action = QAction( QIcon(resource_path('icons', 'open_file.png')), 
                                     CONFIG["toolbar_load_json"], 
                                     self )
         self.load_action.setToolTip(CONFIG["toolbar_load_json_tooltip"])
@@ -477,7 +477,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addAction(self.load_action)
         
         #
-        self.save_as_action = QAction(  QIcon.fromTheme("document-save-as"), 
+        self.save_as_action = QAction(  QIcon(resource_path('icons', 'download.png')), 
                                         CONFIG["toolbar_save_as"], 
                                         self)
         self.save_as_action.setToolTip(CONFIG["toolbar_save_as_tooltip"])
@@ -485,7 +485,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addAction(self.save_as_action)
         
         #
-        self.generate_intro_action = QAction(   QIcon.fromTheme("emblem-generic"), 
+        self.generate_intro_action = QAction(   QIcon(resource_path('icons', 'accessories-text-editor.png')), 
                                                 CONFIG["toolbar_gen_intro"], 
                                                 self)
         self.generate_intro_action.setToolTip(CONFIG["toolbar_gen_intro_tooltip"])
@@ -493,7 +493,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addAction(self.generate_intro_action)
         
         #
-        self.generate_cmd_action = QAction( QIcon.fromTheme("document-edit"), 
+        self.generate_cmd_action = QAction( QIcon(resource_path('icons', 'accessories-text-editor.png')), 
                                             CONFIG["toolbar_gen_prompt"], 
                                             self)
         self.generate_cmd_action.setToolTip(CONFIG["toolbar_gen_prompt_tooltip"])
@@ -506,7 +506,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addWidget(spacer)
         
         #
-        self.llm_conf_action = QAction( QIcon.fromTheme("document-properties"), 
+        self.llm_conf_action = QAction( QIcon(resource_path('icons', 'edit_file.png')), 
                                         CONFIG["toolbar_llm_conf"], 
                                         self)
         self.llm_conf_action.setToolTip(CONFIG["toolbar_llm_conf_tooltip"])
@@ -514,7 +514,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addAction(self.llm_conf_action)
         
         #
-        self.url_usage_action = QAction(QIcon.fromTheme("emblem-web"), 
+        self.url_usage_action = QAction(QIcon(resource_path('icons', 'web-browser.png')), 
                                         CONFIG["toolbar_url_usage"], 
                                         self)
         self.url_usage_action.setToolTip(CONFIG["toolbar_url_usage_tooltip"])
@@ -528,7 +528,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addWidget(separator)
         
         #
-        self.configure_action = QAction(QIcon.fromTheme("document-properties"), 
+        self.configure_action = QAction(QIcon(resource_path('icons', 'edit_file.png')), 
                                         CONFIG["toolbar_configure"], 
                                         self)
         self.configure_action.setToolTip(CONFIG["toolbar_configure_tooltip"])
@@ -536,7 +536,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addAction(self.configure_action)
         
         #
-        self.about_action = QAction(QIcon.fromTheme("help-about"), 
+        self.about_action = QAction(QIcon(resource_path('icons', 'status_help.png')), 
                                     CONFIG["toolbar_about"], 
                                     self)
         self.about_action.setToolTip(CONFIG["toolbar_about_tooltip"])
@@ -544,7 +544,7 @@ class JsonIntroductionEditor(QMainWindow):
         self.toolbar.addAction(self.about_action)
         
         # Coffee
-        self.coffee_action = QAction(   QIcon.fromTheme("emblem-favorite"), 
+        self.coffee_action = QAction(   QIcon(resource_path('icons', 'emote-love.png')), 
                                         CONFIG["toolbar_coffee"], 
                                         self)
         self.coffee_action.setToolTip(CONFIG["toolbar_coffee_tooltip"])
@@ -739,11 +739,11 @@ class JsonIntroductionEditor(QMainWindow):
         btns = QHBoxLayout()
 
         add = QPushButton(CONFIG["related_references_add"])
-        add.setIcon(QIcon.fromTheme("list-add"))
+        add.setIcon(QIcon(resource_path('icons', 'button_add_green.png')))
         add.setIconSize(QSize(32, 32))
 
         remove = QPushButton(CONFIG["related_references_remove"])
-        remove.setIcon(QIcon.fromTheme("list-remove"))
+        remove.setIcon(QIcon(resource_path('icons', 'button_remove_red.png')))
         remove.setIconSize(QSize(32, 32))
 
         btns.addWidget(add)

@@ -20,7 +20,7 @@ article-introduction-generator
 Installing `article-introduction-generator` program
 
 ```bash
-git clone https://github.com/trucomanx/ArticleIntroductionGenerator.git
+git clone https://github.com/trucomanx-desktop/ArticleIntroductionGenerator.git
 cd ArticleIntroductionGenerator
 pip install -r requirements.txt
 cd src
